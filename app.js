@@ -1,12 +1,12 @@
 var express = require('express');
 var app = express();
-require('./db');
+const db = require('./db');
 var user = require('./controllers/usercontroller');
 var game = require('./controllers/gamecontroller');
 const bodyParser = require('body-parser');
 
 
-// db.sync();
+db.sync();
 app.use(bodyParser.json());
 app.use('/api/auth', user);
 app.use(require('./middleware/validate-session'))
