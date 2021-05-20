@@ -1,11 +1,11 @@
 const jwt = require('jsonwebtoken');
-var User = require('sequelize').import('../models/user');
+const User = require('../db').import('../models/user.model');
 
 module.exports = function (req, res, next) {
-    if (req.method == 'OPTIONS') {
+    if (req.method === 'OPTIONS') {
         next();   // allowing options as a method for request
     } else {
-        var sessionToken = req.headers.authorization;
+        const sessionToken = req.headers.authorization;
         console.log(sessionToken);
         if (!sessionToken) return res.status(403).send({ auth: false, message: "No token provided." });
         else {
@@ -13,15 +13,14 @@ module.exports = function (req, res, next) {
                 if (decoded) {
                     User.findOne({ where: { id: decoded.id } }).then(user => {
                         req.user = user;
-                        console.log(`user: ${user}`)
-                        next()
+                        console.log(`user: ${user}`);
+                        next();
                     },
                         function () {
                             res.status(401).send({ error: "not authorized" });
-                        })
-
+                        });
                 } else {
-                    res.status(400).send({ error: "not authorized" })
+                    res.status(400).send({ error: "not authorized" });
                 }
             });
         }
