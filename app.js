@@ -5,7 +5,6 @@ const user = require('./controllers/user.controller');
 const game = require('./controllers/game.controller');
 const bodyParser = require('body-parser');
 
-
 db.sync();
 app.use(bodyParser.json());
 app.use('/api/auth', user);
