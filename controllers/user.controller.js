@@ -1,8 +1,9 @@
-var router = require('express').Router();
-var bcrypt = require('bcrypt');
-var jwt = require('jsonwebtoken');
+const router = require('express').Router();
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const {StatusCodes} = require('http-status-codes');
 
-var User = require('../db').import('../models/user');
+const User = require('../db').import('../models/user.model');
 
 router.post('/signup', (req, res) => {
     User.create({
@@ -13,39 +14,42 @@ router.post('/signup', (req, res) => {
     })
         .then(
             function signupSuccess(user) {
-                let token = jwt.sign({ id: user.id }, 'lets_play_sum_games_man', { expiresIn: 60 * 60 * 24 });
-                res.status(200).json({
+                const token = jwt.sign({ id: user.id }, 'lets_play_sum_games_man', { expiresIn: 60 * 60 * 24 });
+                res.status(StatusCodes.OK).json({
                     user: user,
                     token: token
                 })
             },
 
             function signupFail(err) {
-                res.status(500).send(err.message)
+                res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(err.message)
             }
-        )
-})
+        ).catch(err => {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({message: err.message});
+    });
+});
 
 router.post('/signin', (req, res) => {
     User.findOne({ where: { username: req.body.user.username } }).then(user => {
         if (user) {
             bcrypt.compare(req.body.user.password, user.passwordHash, function (err, matches) {
                 if (matches) {
-                    var token = jwt.sign({ id: user.id }, 'lets_play_sum_games_man', { expiresIn: 60 * 60 * 24 });
+                    const token = jwt.sign({ id: user.id }, 'lets_play_sum_games_man', { expiresIn: 60 * 60 * 24 });
                     res.json({
                         user: user,
                         message: "Successfully authenticated.",
                         sessionToken: token
                     });
                 } else {
-                    res.status(502).send({ error: "Passwords do not match." })
+                    res.status(StatusCodes.NOT_ACCEPTABLE).send({ error: "Passwords do not match." })
                 }
             });
         } else {
-            res.status(403).send({ error: "User not found." })
+            res.status(StatusCodes.NOT_FOUND).send({ error: "User not found." })
         }
-
-    })
-})
+    }).catch(err => {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({message: err.message});
+    });
+});
 
 module.exports = router;
